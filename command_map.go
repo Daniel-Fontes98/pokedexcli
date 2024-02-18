@@ -2,21 +2,20 @@ package main
 
 import (
 	"fmt"
-	"log"
-
-	"github.com/Daniel-Fontes98/pokedexcli/internal/pokeapi"
 )
 
-func callbackMap(c *Config) error{
-	pokeapiClient := pokeapi.NewClient()
-	resp, err := pokeapiClient.ListLocationAreas()
+func callbackMap(cfg *Config, args ... string) error{
+	resp, err := cfg.pokeapiClient.ListLocationAreas(cfg.NextLocationAreaUrl)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	for _, area := range resp.Results {
 		fmt.Printf("%s\n", area.Name)
 	}
+
+	cfg.NextLocationAreaUrl = resp.Next
+	cfg.PreviousLocationAreaUrl = resp.Previous
 
 	return nil
 }

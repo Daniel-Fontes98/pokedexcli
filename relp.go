@@ -11,20 +11,9 @@ import (
 type CliCommand struct {
 	name        string
 	description string
-	callback    func(c *Config) error
+	callback    func(*Config, ...string) error
 }
 
-type Config struct {
-	Next *string
-	Previous *string
-}
-
-func newConfig() Config {
-	return Config {
-		Next: nil,
-		Previous: nil,
-	}
-}
 
 func getCommands() map[string]CliCommand{
 	return map[string]CliCommand{
@@ -40,15 +29,23 @@ func getCommands() map[string]CliCommand{
 		},
 		"map": {
 			name: "map",
-			description: `Displays the name of 20 location areas in the Pokemon world. 
-			Each subsequent call to map displays the next 20 location`,
+			description: `Displays the name of the next 20 location areas in the Pokemon world.`,
 			callback: callbackMap,
+		},
+		"mapb": {
+			name: "mapb",
+			description: `Displays the name of the previous 20 location areas in the Pokemon world.`,
+			callback: callbackMapb,
+		},
+		"explore": {
+			name: "explore <location_name>",
+			description: `Displays the name of all pokemon in a given area`,
+			callback: callbackExplore,
 		},
 	}
 }
 
-func startRepl() {
-	config := newConfig()
+func startRepl(config *Config) {
 	reader := bufio.NewScanner(os.Stdin)
 	for {
 		fmt.Print("Pokedex > ")
@@ -60,13 +57,21 @@ func startRepl() {
 		}
 
 		commandName := words[0]
+		args := []string{}
+		if len(words) > 1 {
+			args = words[1:]
+		}
 
 		command, ok := getCommands()[commandName]
 		if !ok {
 			fmt.Println("invalid command")
 			continue
 		}
-		command.callback(&config)
+		err := command.callback(config, args...)
+		if err != nil {
+			fmt.Println(err)
+		}
+
 	}
 }
 
